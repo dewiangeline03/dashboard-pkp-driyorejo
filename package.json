@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "tailwindcss": "^3.4.3"
+  },
+  "scripts": {
+    "dev": "npx tailwindcss -i ./public/css/input.css -o ./public/css/output.css --watch"
+  },
+  "dependencies": {
+    "preline": "^2.1.0"
+  }
+}

@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    input[type='number']::-webkit-outer-spin-button,
+    input[type='number']::-webkit-inner-spin-button,
+    input[type='number'] {
+      -webkit-appearance: none;
+      margin: 0;
+      -moz-appearance: textfield !important;
+    }
+ }
+ .bg-svg {
+  background-image: url('/img/bg.svg'); /* Update with the actual path to your SVG */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}

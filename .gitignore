@@ -1,0 +1,12 @@
+.env
+writable/
+vendor/
+node_modules/
+*.log
+*.sqlite
+*.zip
+*.bak
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
