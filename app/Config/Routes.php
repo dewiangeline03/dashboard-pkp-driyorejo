@@ -60,3 +60,9 @@ $routes->get('/data-manajer/sub-variabel', 'PKP\SubVariabelController::index', [
 $routes->post('/data-manajer/sub-variabel/add', 'PKP\SubVariabelController::add', ['filter'=>['auth','checkPermission','verified']]);
 $routes->post('/data-manajer/sub-variabel/update', 'PKP\SubVariabelController::update', ['filter'=>['auth','checkPermission','verified']]);
 $routes->delete('/data-manajer/sub-variabel/(:segment)', 'PKP\SubVariabelController::delete/$1',['filter'=>['auth','checkPermission','verified']]);
+
+//histori-penilaian
+$routes->get('/histori-penilaian', 'PKP\HistoriPenilaianController::index',['filter'=>['auth','checkPermission','verified']]);
+$routes->post('/histori-penilaian/restore', 'PKP\HistoriPenilaianController::restore',['filter'=>['auth','checkPermission','verified']]);
+$routes->get('/histori-penilaian/delete/(:segment)', 'PKP\HistoriPenilaianController::delete/$1',['filter'=>['auth','checkPermission','verified']]);
+

@@ -79,6 +79,13 @@
               </a>
             </li>
           <?php endif ?>
+          <li>
+              <a href="<?= base_url('histori-penilaian') ?>"
+                class="flex items-center gap-x-3.5 py-2 px-2.5 text-[16px] rounded-lg 
+                 <?= $active === 'histori-penilaian' ? 'bg-gray-100 text-gray-900 ' : 'text-slate-700 hover:bg-gray-100' ?>">
+                Histori Penilaian
+              </a>
+            </li>
         </ul>
       </li>
       <?php if (session("userInfo")["role"] == 1000): ?>

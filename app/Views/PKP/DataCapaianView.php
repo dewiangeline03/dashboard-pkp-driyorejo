@@ -606,6 +606,7 @@
                         <?= csrf_field() ?>
                         <input type="hidden" name="type" value="variabel">
                         <input type="hidden" name="id" id="var-id">
+                        <input type="hidden" name="periode" x-bind:value="periode">
                         <div class="p-4 overflow-y-auto space-y-6">
 
                             <!-- Nama Variabel -->
@@ -765,6 +766,7 @@
                         <?= csrf_field() ?>
                         <input type="hidden" name="type" value="sub_variabel">
                         <input type="hidden" name="id" id="subvar-id">
+                        <input type="hidden" name="periode" x-bind:value="periode">
                         <div class="p-4 overflow-y-auto space-y-6">
                             <div>
                                 <label class="block text-sm font-medium mb-1 dark:text-white">Nama Sub-Variabel</label>
@@ -917,6 +919,7 @@
                         <input type="hidden" name="type" value="variabel_admen">
                         <div class="p-4 overflow-y-auto space-y-6">
                             <input type="hidden" name="id" id="admen-id">
+                            <input type="hidden" name="periode" x-bind:value="periode">
 
                             <div>
                                 <label for="var-nama"

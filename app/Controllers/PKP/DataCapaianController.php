@@ -9,10 +9,12 @@ use App\Models\PKP\ProgramModel;
 use App\Models\PKP\VariabelModel;
 use App\Models\PKP\VariabelAdmenModel;
 use App\Models\PKP\SubVariabelModel;
+use App\Models\PKP\HistoriPenilaianModel;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Dompdf\Dompdf;
 use Dompdf\Options;
+use Ramsey\Uuid\Uuid;
 
 
 class DataCapaianController extends BaseController
@@ -23,6 +25,7 @@ class DataCapaianController extends BaseController
     protected $variabelModel;
     protected $variabeladmenModel;
     protected $subVariabelModel;
+    protected $historiPenilaianModel;
 
     public function __construct()
     {
@@ -32,8 +35,9 @@ class DataCapaianController extends BaseController
         $this->variabelModel = new VariabelModel();
         $this->variabeladmenModel = new VariabelAdmenModel();
         $this->subVariabelModel = new SubVariabelModel();
+        $this->historiPenilaianModel = new HistoriPenilaianModel();
     }
-    
+
     public function index()
     {
         $selectedPeriodeID = $this->request->getGet('periode');
@@ -72,9 +76,9 @@ class DataCapaianController extends BaseController
 
         $instrumen = (!empty($selectedPeriodeID))
             ? $this->instrumenModel
-                ->where('id_periode', $selectedPeriodeID)
-                ->orderBy('nama', 'ASC')
-                ->findAll()
+            ->where('id_periode', $selectedPeriodeID)
+            ->orderBy('nama', 'ASC')
+            ->findAll()
             : [];
         $selectedInstrumen = null;
         $selected_instrumen_nama = '-';
@@ -91,9 +95,9 @@ class DataCapaianController extends BaseController
 
         $program = (!empty($selectedInstrumenID))
             ? $this->programModel
-                ->where('id_instrumen', $selectedInstrumenID)
-                ->orderBy('nama', 'ASC')
-                ->findAll()
+            ->where('id_instrumen', $selectedInstrumenID)
+            ->orderBy('nama', 'ASC')
+            ->findAll()
             : [];
 
         $variabel = [];
@@ -237,10 +241,19 @@ class DataCapaianController extends BaseController
     {
         $id = $this->request->getPost('id');
         $type = $this->request->getPost('type');
-        $activeTab = $this->request->getGet('tab') ?? 'umum';
+        $userAgent = $this->request->getUserAgent();
+        $userAgentString = $userAgent->getAgentString();
 
         try {
+            $tingkat_indikator = '';
+            $oldDataJson = null;
+            $newDataJson = null;
+
+
             if ($type == 'variabel') {
+                $tingkat_indikator = 'Variabel Tipe 1';
+                $oldData = $this->variabelModel->find($id);
+
                 $data = [
                     'nama' => $this->request->getPost('nama'),
                     'target_operator' => $this->request->getPost('target_operator'),
@@ -251,8 +264,30 @@ class DataCapaianController extends BaseController
                     'analisa_akar_penyebab_masalah' => $this->request->getPost('analisa_akar_penyebab_masalah'),
                     'rencana_tindak_lanjut' => $this->request->getPost('rencana_tindak_lanjut'),
                 ];
-                $this->variabelModel->update($id, $data);
-            } elseif ($type == 'sub_variabel') {
+
+                if ($this->variabelModel->update($id, $data)) {
+                    $renames = [
+                        'nama' => 'Nama',
+                        'target_operator' => 'Target Operator',
+                        'target_value' => 'Target Value',
+                        'satuan_sasaran' => 'Satuan Sasaran',
+                        'total_sasaran' => 'Total Sasaran',
+                        'pencapaian' => 'Pencapaian',
+                        'analisa_akar_penyebab_masalah' => 'Analisa Akar Penyebab Masalah',
+                        'rencana_tindak_lanjut' => 'Rencana Tindak Lanjut',
+                    ];
+
+                    $logData = $this->filterChangedFields($oldData, $data, $renames);
+
+                    $oldDataJson = json_encode($logData['sebelum'], JSON_UNESCAPED_UNICODE);
+                    $newDataJson = json_encode($logData['sesudah'], JSON_UNESCAPED_UNICODE);
+                }
+            }
+
+            if ($type == 'sub_variabel') {
+                $tingkat_indikator = 'Sub-Variabel';
+                $oldData = $this->subVariabelModel->find($id);
+
                 $data = [
                     'nama' => $this->request->getPost('nama'),
                     'target_operator' => $this->request->getPost('target_operator'),
@@ -263,8 +298,30 @@ class DataCapaianController extends BaseController
                     'analisa_akar_penyebab_masalah' => $this->request->getPost('analisa_akar_penyebab_masalah'),
                     'rencana_tindak_lanjut' => $this->request->getPost('rencana_tindak_lanjut'),
                 ];
-                $this->subVariabelModel->update($id, $data);
-            } elseif ($type == 'variabel_admen') {
+
+                if ($this->subVariabelModel->update($id, $data)) {
+                    $renames = [
+                        'nama' => 'Nama',
+                        'target_operator' => 'Target Operator',
+                        'target_value' => 'Target Value',
+                        'satuan_sasaran' => 'Satuan Sasaran',
+                        'total_sasaran' => 'Total Sasaran',
+                        'pencapaian' => 'Pencapaian',
+                        'analisa_akar_penyebab_masalah' => 'Analisa Akar Penyebab Masalah',
+                        'rencana_tindak_lanjut' => 'Rencana Tindak Lanjut',
+                    ];
+
+                    $logData = $this->filterChangedFields($oldData, $data, $renames);
+
+                    $oldDataJson = json_encode($logData['sebelum'], JSON_UNESCAPED_UNICODE);
+                    $newDataJson = json_encode($logData['sesudah'], JSON_UNESCAPED_UNICODE);
+                }
+            }
+
+            if ($type == 'variabel_admen') {
+                $tingkat_indikator = 'Variabel Tipe 2';
+                $oldData = $this->variabeladmenModel->find($id);
+
                 $data = [
                     'nama' => $this->request->getPost('nama'),
                     'definisi_operasional' => $this->request->getPost('definisi_operasional'),
@@ -276,8 +333,70 @@ class DataCapaianController extends BaseController
                     'analisa_akar_penyebab_masalah' => $this->request->getPost('analisa_akar_penyebab_masalah'),
                     'rencana_tindak_lanjut' => $this->request->getPost('rencana_tindak_lanjut'),
                 ];
-                $this->variabeladmenModel->update($id, $data);
+
+                if ($this->variabeladmenModel->update($id, $data)) {
+                    $renames = [
+                        'nama' => 'Nama',
+                        'definisi_operasional' => 'Definisi Operasional',
+                        'skala_nilai_0' => 'Skala Nilai 0',
+                        'skala_nilai_4' => 'Skala Nilai 4',
+                        'skala_nilai_7' => 'Skala Nilai 7',
+                        'skala_nilai_10' => 'Skala Nilai 10',
+                        'nilai' => 'Nilai',
+                        'analisa_akar_penyebab_masalah' => 'Analisa Akar Penyebab Masalah',
+                        'rencana_tindak_lanjut' => 'Rencana Tindak Lanjut',
+                    ];
+
+                    $logData = $this->filterChangedFields($oldData, $data, $renames);
+
+                    $oldDataJson = json_encode($logData['sebelum'], JSON_UNESCAPED_UNICODE);
+                    $newDataJson = json_encode($logData['sesudah'], JSON_UNESCAPED_UNICODE);
+                }
             }
+
+            // Simpan histori hanya jika ada perubahan
+            if ($oldDataJson && $newDataJson) {
+                $selectedPeriodeID = $this->request->getPost('periode');
+                $selectedPeriode = $this->periodeModel->find($selectedPeriodeID);
+
+                $nama_bulan = [
+                    1 => 'Januari',
+                    2 => 'Februari',
+                    3 => 'Maret',
+                    4 => 'April',
+                    5 => 'Mei',
+                    6 => 'Juni',
+                    7 => 'Juli',
+                    8 => 'Agustus',
+                    9 => 'September',
+                    10 => 'Oktober',
+                    11 => 'November',
+                    12 => 'Desember'
+                ];
+
+                $periode = 'Periode Tidak Diketahui';
+                if ($selectedPeriode) {
+                    $bulan = (int) $selectedPeriode['id_bulan'];
+                    $tahun = $selectedPeriode['tahun'];
+                    $bulanNama = $nama_bulan[$bulan] ?? 'Bulan?';
+                    $periode = $bulanNama . ' ' . $tahun;
+                }
+
+
+                $historyData = [
+                    'id' => Uuid::uuid4()->toString(),
+                    'id_akun' => session()->get('userInfo')['id'],
+                    'id_indikator' => $id,
+                    'nama_indikator' => $this->request->getPost('nama'),
+                    'tingkat_indikator' => $tingkat_indikator,
+                    'periode' => $periode,
+                    'data_sebelum' => $oldDataJson,
+                    'data_sesudah' => $newDataJson,
+                    'user_agent' => $userAgentString
+                ];
+                $this->historiPenilaianModel->save($historyData);
+            }
+
             session()->setFlashdata('pesan', 'Data Berhasil Diperbaharui');
         } catch (\Throwable $th) {
             session()->setFlashdata('error', 'Data Gagal Diperbaharui: ' . $th->getMessage());
@@ -285,6 +404,26 @@ class DataCapaianController extends BaseController
 
         return redirect()->to(previous_url());
     }
+
+    private function filterChangedFields(array $old, array $new, array $renames = []): array
+    {
+        $before = [];
+        $after = [];
+
+        foreach ($new as $key => $value) {
+            $oldValue = $old[$key] ?? null;
+            if ((string)$oldValue !== (string)$value) {
+                $label = $renames[$key] ?? $key;
+                $before[$label] = $oldValue;
+                $after[$label] = $value;
+            }
+        }
+
+        return ['sebelum' => $before, 'sesudah' => $after];
+    }
+
+
+
 
 
     public function downloadExcel()
